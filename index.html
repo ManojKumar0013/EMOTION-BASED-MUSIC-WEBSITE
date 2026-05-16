@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexTune — Emotion Based Music Recommendation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Nunito:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">
+    <span class="loading-wave">🎵</span>
+    <span class="loading-brand-text">NexTune</span>
+  </div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar-fill"></div>
+  </div>
+  <p class="loading-tagline">LOADING YOUR VIBE...</p>
+</div>
+
+
+<div class="bg-canvas" id="bgCanvas">
+  <div class="bg-orb orb-1" id="orb1"></div>
+  <div class="bg-orb orb-2" id="orb2"></div>
+  <div class="bg-orb orb-3" id="orb3"></div>
+</div>
+
+<div class="rain-layer"    id="rainLayer"    aria-hidden="true"></div>
+
+<div class="fire-layer"    id="fireLayer"    aria-hidden="true"></div>
+
+<div class="breathe-layer" id="breatheLayer" aria-hidden="true">
+  <div class="breathe-ring" style="--sz:280px;--op:.18;--del:0s"></div>
+  <div class="breathe-ring" style="--sz:440px;--op:.11;--del:1.2s"></div>
+  <div class="breathe-ring" style="--sz:600px;--op:.07;--del:2.4s"></div>
+</div>
+
+
+<div class="heart-layer"   id="heartLayer"   aria-hidden="true"></div>
+
+
+<div class="star-layer"    id="starLayer"    aria-hidden="true"></div>
+
+<div class="visualizer-wrap" id="visualizerWrap" aria-hidden="true"></div>
+
+
+<div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+<div class="profile-drop" id="profileDrop" role="menu">
+  <div class="pd-head">
+    <div class="pd-avatar" id="pdAvatar"></div>
+    <div class="pd-info">
+      <div class="pd-name"  id="pdName">—</div>
+      <div class="pd-email" id="pdEmail">—</div>
+    </div>
+  </div>
+  <div class="pd-sep"></div>
+  <div class="pd-item" onclick="navTo('dashboard');closeProfile()" role="menuitem">🏠 Dashboard</div>
+  <div class="pd-item" onclick="navTo('analytics');closeProfile()"  role="menuitem">📊 Mood Analytics</div>
+  <div class="pd-item" onclick="navTo('favorites');closeProfile()"  role="menuitem">❤️ Favourites</div>
+  <div class="pd-item" onclick="navTo('recent');closeProfile()"     role="menuitem">🕐 Recently Played</div>
+  <div class="pd-item" onclick="navTo('about');closeProfile()"      role="menuitem">ℹ️ About Us</div>
+  <div class="pd-item" onclick="navTo('contact');closeProfile()"    role="menuitem">📬 Contact</div>
+  <div class="pd-item" onclick="navTo('playlist-builder');closeProfile()" role="menuitem">🎛️ Playlist Builder</div>
+  <div class="pd-sep"></div>
+  <div class="pd-item pd-admin-item" id="adminMenuItem"
+       onclick="navTo('admin');closeProfile()" role="menuitem"
+       style="display:none">⚙️ Admin Panel</div>
+  <div class="pd-item pd-danger" onclick="doLogout()" role="menuitem">🚪 Sign Out</div>
+</div>
+
+<div id="app" style="display:none">
+
+  
+  <header class="topbar" role="banner">
+
+    <button class="menu-btn" id="menuBtn"
+            onclick="toggleSidebar()"
+            aria-label="Open navigation menu"
+            aria-expanded="false">
+      <span class="mline"></span>
+      <span class="mline"></span>
+      <span class="mline"></span>
+    </button>
+
+    <div class="topbar-brand">🎵 NexTune</div>
+
+    <div class="search-wrap" role="search">
+      <svg class="search-icon-svg" width="15" height="15"
+           viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="search"
+             placeholder="Search songs, artists, moods…"
+             oninput="handleSearch(this.value)"
+             onfocus="openSearchDrop()"
+             aria-label="Search music"
+             autocomplete="off"/>
+      <div class="search-results" id="searchResults" role="listbox"></div>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <div class="greeting-pill" id="greetingPill">
+      <span class="greeting-dot"></span>
+      <span class="greeting-text" id="greetingText">Loading…</span>
+    </div>
+
+    <button class="avatar-btn" id="avatarBtn"
+            onclick="toggleProfile()"
+            aria-label="Profile menu"
+            aria-haspopup="true">
+    </button>
+
+  </header>
+
+  
+  <div class="sidebar-overlay" id="sidebarOverlay"
+       onclick="closeSidebar()" aria-hidden="true"></div>
+
+
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-inner">
+
+      <div class="sidebar-head">
+        <div class="sidebar-logo">🎵 NexTune</div>
+        <div class="sidebar-sub" id="sidebarUserEmail">—</div>
+      </div>
+
+      <p class="sidebar-section-lbl">Navigation</p>
+
+      <div class="sidebar-item" id="snav-home"
+           onclick="navTo('home');closeSidebar()">
+        <span class="si-icon">🏠</span>
+        <span class="si-label">Home</span>
+      </div>
+      <div class="sidebar-item" id="snav-dashboard"
+           onclick="navTo('dashboard');closeSidebar()">
+        <span class="si-icon">📋</span>
+        <span class="si-label">Dashboard</span>
+      </div>
+      <div class="sidebar-item" id="snav-favorites"
+           onclick="navTo('favorites');closeSidebar()">
+        <span class="si-icon">❤️</span>
+        <span class="si-label">Favourites</span>
+        <span class="si-badge" id="favBadge">0</span>
+      </div>
+      <div class="sidebar-item" id="snav-recent"
+           onclick="navTo('recent');closeSidebar()">
+        <span class="si-icon">🕐</span>
+        <span class="si-label">Recently Played</span>
+      </div>
+      <div class="sidebar-item" id="snav-analytics"
+           onclick="navTo('analytics');closeSidebar()">
+        <span class="si-icon">📊</span>
+        <span class="si-label">Mood Analytics</span>
+      </div>
+      <div class="sidebar-item" id="snav-about"
+           onclick="navTo('about');closeSidebar()">
+        <span class="si-icon">ℹ️</span>
+        <span class="si-label">About Us</span>
+      </div>
+      <div class="sidebar-item" id="snav-contact"
+           onclick="navTo('contact');closeSidebar()">
+        <span class="si-icon">📬</span>
+        <span class="si-label">Contact</span>
+      </div>
+      <div class="sidebar-item" id="snav-playlist-builder"
+           onclick="navTo('playlist-builder');closeSidebar()">
+        <span class="si-icon">🎛️</span>
+        <span class="si-label">Playlist Builder</span>
+      </div>
+
+      <p class="sidebar-section-lbl">Playlists</p>
+
+      <div class="sidebar-item" onclick="loadPlaylist('Happy','😊',this);closeSidebar()">
+        <span class="si-icon">😊</span><span class="si-label">Happy Vibes</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Workout','💪',this);closeSidebar()">
+        <span class="si-icon">💪</span><span class="si-label">Workout</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Chill','☁️',this);closeSidebar()">
+        <span class="si-icon">☁️</span><span class="si-label">Chill</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Party','🎉',this);closeSidebar()">
+        <span class="si-icon">🎉</span><span class="si-label">Party</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Travel','✈️',this);closeSidebar()">
+        <span class="si-icon">✈️</span><span class="si-label">Travel</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Wedding','💍',this);closeSidebar()">
+        <span class="si-icon">💍</span><span class="si-label">Wedding</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Kids','🧒',this);closeSidebar()">
+        <span class="si-icon">🧒</span><span class="si-label">Kids</span>
+      </div>
+      <div class="sidebar-item" onclick="loadPlaylist('Retro','📻',this);closeSidebar()">
+        <span class="si-icon">📻</span><span class="si-label">Retro</span>
+      </div>
+
+      <p class="sidebar-section-lbl sidebar-admin-lbl"
+         id="sidebarAdminLbl" style="display:none">Admin</p>
+      <div class="sidebar-item sidebar-admin-item" id="snav-admin"
+           onclick="navTo('admin');closeSidebar()" style="display:none">
+        <span class="si-icon">⚙️</span>
+        <span class="si-label">Admin Panel</span>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-outline btn-full"
+                onclick="doLogout()">Sign Out</button>
+      </div>
+
+    </div>
+  </nav>
+
+
+  <main class="main-content" id="mainContent">
+    <div class="page-scroll">
+
+
+      <section class="page active" id="page-home" aria-label="Home">
+
+        
+        <div class="hello-block">
+          <p  class="hello-time" id="timeLabel">Good morning</p>
+          <h1 class="hello-name" id="helloName">Hey there 👋</h1>
+          <p  class="hello-sub">Mood detected . Music selected</p>
+        </div>
+
+        
+        <div class="section-hdr">
+          <h2 class="section-title">Choose Your Mood</h2>
+          <p  class="section-sub">Your mood. Your music.</p>
+        </div>
+
+        
+        <div class="emotion-grid" id="emotionGrid" role="list">
+
+          <article class="emo-card joy-card"
+                   onclick="selectEmo('joy',this)"
+                   role="listitem" tabindex="0" aria-label="Joy">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">😄</span>
+            <strong class="emo-name">Joy</strong>
+            <span class="emo-sub">Happy &amp; bright</span>
+          </article>
+
+          <article class="emo-card sad-card"
+                   onclick="selectEmo('sad',this)"
+                   role="listitem" tabindex="0" aria-label="Sad">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">😢</span>
+            <strong class="emo-name">Sad</strong>
+            <span class="emo-sub">Need comfort</span>
+          </article>
+
+          <article class="emo-card angry-card"
+                   onclick="selectEmo('angry',this)"
+                   role="listitem" tabindex="0" aria-label="Angry">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">😤</span>
+            <strong class="emo-name">Angry</strong>
+            <span class="emo-sub">Fired up</span>
+          </article>
+
+          <article class="emo-card fear-card"
+                   onclick="selectEmo('fear',this)"
+                   role="listitem" tabindex="0" aria-label="Anxious">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">😨</span>
+            <strong class="emo-name">Anxious</strong>
+            <span class="emo-sub">Overthinking</span>
+          </article>
+
+          <article class="emo-card calm-card"
+                   onclick="selectEmo('calm',this)"
+                   role="listitem" tabindex="0" aria-label="Calm">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">😌</span>
+            <strong class="emo-name">Calm</strong>
+            <span class="emo-sub">Peaceful</span>
+          </article>
+
+          <article class="emo-card excited-card"
+                   onclick="selectEmo('excited',this)"
+                   role="listitem" tabindex="0" aria-label="Excited">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">🤩</span>
+            <strong class="emo-name">Excited</strong>
+            <span class="emo-sub">Full energy</span>
+          </article>
+
+          <article class="emo-card disgust-card"
+                   onclick="selectEmo('disgust',this)"
+                   role="listitem" tabindex="0" aria-label="Disgust">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">🤢</span>
+            <strong class="emo-name">Disgust</strong>
+            <span class="emo-sub">Irritated</span>
+          </article>
+
+          <article class="emo-card love-card"
+                   onclick="selectEmo('love',this)"
+                   role="listitem" tabindex="0" aria-label="Love">
+            <div class="emo-glow"></div>
+            <span class="emo-emoji">🥰</span>
+            <strong class="emo-name">Love</strong>
+            <span class="emo-sub">Romantic</span>
+          </article>
+
+        </div>
+
+        <div id="songsSection" style="display:none">
+
+          <div class="section-hdr">
+            <h2 class="section-title" id="songSectionTitle">🎵 Songs for you</h2>
+            <div class="section-actions">
+              <select class="filter-select" id="genreFilter"
+                      onchange="applyFilter()" aria-label="Filter by genre">
+                <option value="">All Genres</option>
+                <option value="pop">Pop</option>
+                <option value="rock">Rock</option>
+                <option value="ambient">Ambient</option>
+                <option value="electronic">Electronic</option>
+                <option value="classical">Classical</option>
+                <option value="jazz">Jazz</option>
+                <option value="hiphop">Hip-Hop</option>
+              </select>
+              <button class="btn btn-sm"
+                      onclick="loadMoreSongs()">Load more</button>
+            </div>
+          </div>
+
+          
+          <div class="song-grid" id="songGrid" role="list"></div>
+
+          <p class="stream-label" id="streamLabel" style="display:none">
+            🎵 Streaming via <strong>Jamendo</strong> · Free &amp; legal music
+          </p>
+
+        </div>
+
+      </section>
+
+      <section class="page" id="page-dashboard" aria-label="User Dashboard">
+
+        <div class="page-hero">
+          <h1 class="page-hero-title" id="dashWelcome">Welcome back!</h1>
+          <p class="page-hero-sub">Your personalised overview</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card">
+            <span class="stat-icon">🎵</span>
+            <span class="stat-val" id="dsSongs">0</span>
+            <span class="stat-lbl">Songs Played</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">❤️</span>
+            <span class="stat-val" id="dsFavs">0</span>
+            <span class="stat-lbl">Favourites</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🎭</span>
+            <span class="stat-val" id="dsMoods">0</span>
+            <span class="stat-lbl">Mood Sessions</span>
+          </div>
+        </div>
+
+      
+        <div class="card mt-20">
+          <h3 class="card-title">Your Mood History</h3>
+          <div class="mood-chips" id="dashMoodChips">
+            <p class="empty-hint">Select a mood on the Home page to start tracking.</p>
+          </div>
+        </div>
+
+        <div class="card mt-20">
+          <h3 class="card-title">Recommended For You</h3>
+          <div class="rec-grid" id="dashRecPlaylists"></div>
+        </div>
+
+        <div class="card mt-20">
+          <h3 class="card-title">Recent Activity</h3>
+          <div id="dashRecent">
+            <p class="empty-hint">Nothing yet — start listening!</p>
+          </div>
+        </div>
+
+      </section>
+
+
+      <section class="page" id="page-favorites" aria-label="Favourites">
+
+        <div class="section-hdr">
+          <h2 class="section-title">❤️ Your Favourites</h2>
+          <button class="btn btn-danger-ghost btn-sm"
+                  onclick="clearFavorites()">Clear all</button>
+        </div>
+
+        <div class="song-grid" id="favoritesGrid" role="list"></div>
+
+        <div class="empty-state" id="favEmpty" style="display:none">
+          <span class="empty-icon">💔</span>
+          <p>No favourites yet.<br>Tap ❤️ on any song to save it.</p>
+        </div>
+
+      </section>
+
+      <section class="page" id="page-recent" aria-label="Recently Played">
+
+        <div class="section-hdr">
+          <h2 class="section-title">🕐 Recently Played</h2>
+          <button class="btn btn-danger-ghost btn-sm"
+                  onclick="clearRecent()">Clear</button>
+        </div>
+
+        <div class="recent-list-wrap" id="recentList" role="list"></div>
+
+        <div class="empty-state" id="recentEmpty" style="display:none">
+          <span class="empty-icon">🎵</span>
+          <p>Nothing played yet.<br>Pick a mood and start listening!</p>
+        </div>
+
+      </section>
+
+
+      <section class="page" id="page-analytics" aria-label="Mood Analytics">
+
+        <div class="page-hero">
+          <h1 class="page-hero-title">📊 Mood Analytics</h1>
+          <p class="page-hero-sub">Track your emotional journey over time</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card">
+            <span class="stat-icon">🎵</span>
+            <span class="stat-val" id="anSongs">0</span>
+            <span class="stat-lbl">Songs Played</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">❤️</span>
+            <span class="stat-val" id="anFavs">0</span>
+            <span class="stat-lbl">Favourites</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🎭</span>
+            <span class="stat-val" id="anMoods">0</span>
+            <span class="stat-lbl">Mood Changes</span>
+          </div>
+        </div>
+
+        
+        <div class="card mt-20">
+          <h3 class="card-title">This Week's Mood Journey</h3>
+          <div class="bar-chart-wrap">
+            <div class="bar-chart" id="moodBarChart"
+                 aria-label="Mood frequency bar chart"></div>
+          </div>
+        </div>
+
+        
+        <div class="card mt-20">
+          <h3 class="card-title">Recent Mood Sessions</h3>
+          <div id="moodTimeline">
+            <p class="empty-hint">No sessions yet.</p>
+          </div>
+        </div>
+
+        <div class="insight-card mt-20">
+          <span class="insight-icon">💡</span>
+          <div>
+            <p class="insight-title">Your Mood Insight</p>
+            <p class="insight-text" id="insightText">
+              Start listening to generate insights about your emotional patterns.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+
+      <section class="page" id="page-about" aria-label="About Us">
+
+        <div class="page-hero">
+          <h1 class="page-hero-title">ℹ️ About NexTune</h1>
+          <p class="page-hero-sub">Where emotion meets music</p>
+        </div>
+
+        <div class="about-grid">
+
+          <div class="card">
+            <h3 class="card-title">🎯 Project Overview</h3>
+            <p class="card-text">
+              <strong>NexTune</strong> is an <em>Emotion-Based Music Recommendation
+              Website</em> developed as an end-semester project for
+              <strong>User Interface Design</strong> at
+              Amrita School of Computing, Amritapuri.
+            </p>
+            <p class="card-text mt-12">
+              Select how you feel — happy, sad, energetic, calm — and NexTune
+              instantly surfaces the perfect playlist using the
+              <strong>Jamendo API</strong> (600 000+ free, legal tracks).
+              The background reacts to your mood with live animations
+              (rain, fire, breathing rings, floating hearts) inspired by
+              the film <em>Inside Out</em>.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">🛠 Technologies Used</h3>
+            <ul class="tech-list">
+              <li><span class="tech-badge">HTML5</span> Semantic structure &amp; accessibility</li>
+              <li><span class="tech-badge">CSS3</span> Glassmorphism, animations, media queries</li>
+              <li><span class="tech-badge">JavaScript</span> Web Audio API, Fetch, LocalStorage</li>
+              <li><span class="tech-badge">Jamendo API</span> 600K+ free songs</li>
+              <li><span class="tech-badge">Web Audio API</span> Real-time music visualiser</li>
+            </ul>
+          </div>
+
+          <div class="card about-team-card">
+            <h3 class="card-title">👥 Team Members</h3>
+            <div class="team-grid">
+
+              <div class="team-card">
+                <div class="team-avatar">BG</div>
+                <strong class="team-name">Bandela Gowtham Sai</strong>
+                <span class="team-id">AM.SC.U4CSE25208</span>
+                <span class="team-role">UI Design &amp; Frontend</span>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar">BM</div>
+                <strong class="team-name">Bondada Manoj Kumar</strong>
+                <span class="team-id">AM.SC.U4CSE25210</span>
+                <span class="team-role">API Integration &amp; JS</span>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar">KY</div>
+                <strong class="team-name">Kommineni Yashwanth</strong>
+                <span class="team-id">AM.SC.U4CSE25228</span>
+                <span class="team-role">Animations &amp; CSS</span>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar">PO</div>
+                <strong class="team-name">Pagidela Obulesu</strong>
+                <span class="team-id">AM.SC.U4CSE25267</span>
+                <span class="team-role">Auth &amp; Data Storage</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+      <section class="page" id="page-contact" aria-label="Contact">
+
+        <div class="page-hero">
+          <h1 class="page-hero-title">📬 Contact Us</h1>
+          <p class="page-hero-sub">Got feedback? We'd love to hear from you.</p>
+        </div>
+
+        <div class="contact-grid">
+
+          
+          <div class="card">
+            <h3 class="card-title">About Us</h3>
+            <p class="card-text">
+              This project recommends music based on your emotions.
+              Built by a team of four students from
+              <strong>Amrita School of Computing, Amaravati</strong>
+              as part of the User Interface Design course.
+            </p>
+            <div class="contact-links mt-20">
+              <a class="contact-link-btn"
+                 href="https://github.com/ManojKumar0013/EMOTION_BASED_MUSIC_WEBSITE" target="_blank"
+                 rel="noopener noreferrer">🐙 GitHub Repository</a>
+              <a class="contact-link-btn"
+                 href="#" onclick="navTo('about');return false">
+                 👥 Meet the Team</a>
+            </div>
+          </div>
+
+          
+          <div class="card">
+            <h3 class="card-title">Contact Us</h3>
+            <div class="msg ok" id="contactSuccess" style="display:none">
+              ✓ Message sent! We'll get back to you soon.
+            </div>
+            <div class="field">
+              <label for="cName">Name</label>
+              <input type="text"   id="cName"
+                     placeholder="Your name"
+                     autocomplete="name"/>
+            </div>
+            <div class="field">
+              <label for="cEmail">Email</label>
+              <input type="email"  id="cEmail"
+                     placeholder="your@email.com"
+                     autocomplete="email"/>
+            </div>
+            <div class="field">
+              <label for="cMsg">Message</label>
+              <textarea id="cMsg" rows="4"
+                        placeholder="Your message here…"></textarea>
+            </div>
+            <button class="btn btn-accent mt-12"
+                    onclick="submitContact()">Send Message →</button>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <section class="page" id="page-admin" aria-label="Admin Panel">
+
+        <div class="page-hero">
+          <h1 class="page-hero-title">⚙️ Admin Panel</h1>
+          <p class="page-hero-sub">Manage songs, users &amp; site content</p>
+        </div>
+
+        <div class="admin-tabs" role="tablist">
+          <button class="admin-tab active"
+                  onclick="switchAdminTab('songs',this)"
+                  role="tab" aria-selected="true">🎵 Songs</button>
+          <button class="admin-tab"
+                  onclick="switchAdminTab('users',this)"
+                  role="tab" aria-selected="false">👤 Users</button>
+          <button class="admin-tab"
+                  onclick="switchAdminTab('site',this)"
+                  role="tab" aria-selected="false">🌐 Site</button>
+        </div>
+
+        <div class="admin-panel active" id="adminTab-songs"
+             role="tabpanel">
+          <div class="card">
+            <div class="card-hdr-row">
+              <h3 class="card-title">Song List</h3>
+              <button class="btn btn-accent btn-sm"
+                      onclick="toggleAddSong()">+ Add New Song</button>
+            </div>
+
+            
+            <div id="addSongForm" class="add-form" style="display:none">
+              <div class="form-row">
+                <div class="field">
+                  <label for="asSongTitle">Title</label>
+                  <input type="text" id="asSongTitle" placeholder="Song title"/>
+                </div>
+                <div class="field">
+                  <label for="asSongArtist">Artist</label>
+                  <input type="text" id="asSongArtist" placeholder="Artist name"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label for="asSongEmo">Emotion Tag</label>
+                  <select id="asSongEmo">
+                    <option value="joy">😄 Joy</option>
+                    <option value="sad">😢 Sad</option>
+                    <option value="angry">😤 Angry</option>
+                    <option value="fear">😨 Anxious</option>
+                    <option value="calm">😌 Calm</option>
+                    <option value="excited">🤩 Excited</option>
+                    <option value="disgust">🤢 Disgust</option>
+                    <option value="love">🥰 Love</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="asSongUrl">Audio URL</label>
+                  <input type="url" id="asSongUrl" placeholder="https://…"/>
+                </div>
+              </div>
+              <div class="field">
+                <label for="asSongArt">Album Art URL</label>
+                <input type="url" id="asSongArt" placeholder="https://…"/>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-accent" onclick="addAdminSong()">Save Song</button>
+                <button class="btn btn-ghost" onclick="toggleAddSong()">Cancel</button>
+              </div>
+            </div>
+
+            <div id="adminSongList" class="admin-list mt-12"></div>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="adminTab-users" role="tabpanel">
+          <div class="card">
+            <h3 class="card-title">Registered Users</h3>
+            <div id="adminUserList" class="admin-list mt-12"></div>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="adminTab-site" role="tabpanel">
+          <div class="card">
+            <h3 class="card-title">Site Statistics</h3>
+            <div class="stat-row mt-12" id="adminSiteStats"></div>
+            <div class="card mt-20">
+              <h3 class="card-title">Manage Playlists</h3>
+              <p class="card-text">Playlists are dynamically generated from Jamendo API
+                 based on mood tags. Use the Jamendo dashboard to adjust content
+                 licensing and track availability.</p>
+              <a class="btn btn-outline mt-12"
+                 href="https://www.jamendo.com" target="_blank"
+                 rel="noopener">Open Jamendo Dashboard ↗</a>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    <section class="page" id="page-playlist-builder" aria-label="Vue Playlist Builder">
+
+      <div id="vuePlaylistApp">
+
+        <div class="vpb-hero">
+          <h1 class="vpb-title">🎛️ Mood Playlist Builder</h1>
+          <p class="vpb-sub">Build, customise and save your own mood-based playlists</p>
+        </div>
+
+        <div class="vpb-card">
+          <h2 class="vpb-card-title">① Select a Mood</h2>
+          <div class="vpb-mood-grid">
+            <button v-for="m in moods" :key="m.key"
+                    class="vpb-mood-btn"
+                    :class="{ 'vpb-mood-btn--active': selectedMood === m.key }"
+                    :style="{ '--mc': m.color }"
+                    @click="selectMood(m.key)">
+              <span class="vpb-mood-emoji">{{ m.emoji }}</span>
+              <span class="vpb-mood-label">{{ m.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="vpb-card" v-if="selectedMood">
+          <h2 class="vpb-card-title">② Playlist Settings</h2>
+          <div class="vpb-settings-grid">
+            <div class="vpb-field">
+              <label class="vpb-label">Playlist Name</label>
+              <input class="vpb-input" v-model="playlistName"
+                     :placeholder="'My ' + moodLabel + ' Mix'" maxlength="40"/>
+            </div>
+            <div class="vpb-field">
+              <label class="vpb-label">Number of Songs</label>
+              <input class="vpb-input" type="number" v-model.number="songCount" min="5" max="30"/>
+            </div>
+            <div class="vpb-field">
+              <label class="vpb-label">Preferred Language</label>
+              <select class="vpb-select" v-model="language">
+                <option value="">Any Language</option>
+                <option v-for="l in languages" :key="l" :value="l">{{ l }}</option>
+              </select>
+            </div>
+            <div class="vpb-field">
+              <label class="vpb-label">Energy Level</label>
+              <div class="vpb-energy-row">
+                <span class="vpb-energy-lbl">😴 Low</span>
+                <input type="range" class="vpb-range" v-model.number="energy" min="1" max="5"/>
+                <span class="vpb-energy-lbl">⚡ High</span>
+                <span class="vpb-energy-val">{{ energyLabel }}</span>
+              </div>
+            </div>
+          </div>
+          <button class="vpb-build-btn" @click="buildPlaylist" :disabled="building">
+            <span v-if="!building">🎵 Build Playlist</span>
+            <span v-else>⏳ Fetching songs…</span>
+          </button>
+        </div>
+
+        <div class="vpb-card" v-if="playlist.length">
+          <div class="vpb-playlist-header">
+            <h2 class="vpb-card-title">③ Your Playlist — {{ finalName }}</h2>
+            <div class="vpb-playlist-meta">
+              <span class="vpb-meta-chip">🎵 {{ playlist.length }} songs</span>
+              <span class="vpb-meta-chip">{{ moodLabel }}</span>
+              <span class="vpb-meta-chip" v-if="language">{{ language }}</span>
+            </div>
+          </div>
+          <div class="vpb-song-list">
+            <transition-group name="vpb-fade" tag="div">
+              <div v-for="(song, idx) in playlist" :key="song.id"
+                   class="vpb-song-row"
+                   :class="{ 'vpb-song-row--playing': currentIdx === idx }">
+                <span class="vpb-song-num">{{ idx + 1 }}</span>
+                <img class="vpb-song-art"
+                     :src="song.image || 'https://via.placeholder.com/48/1a1a2e/a855f7?text=🎵'"
+                     :alt="song.name"
+                     @error="$event.target.src='https://via.placeholder.com/48/1a1a2e/a855f7?text=🎵'"/>
+                <div class="vpb-song-info">
+                  <span class="vpb-song-name">{{ song.name }}</span>
+                  <span class="vpb-song-artist">{{ song.artist }}</span>
+                </div>
+                <div class="vpb-song-actions">
+                  <button class="vpb-icon-btn" @click="playSong(idx)">{{ currentIdx === idx ? '🔊' : '▶' }}</button>
+                  <button class="vpb-icon-btn" :class="{ 'vpb-icon-btn--fav': isFav(song.id) }" @click="toggleFavVue(song)">{{ isFav(song.id) ? '❤️' : '♡' }}</button>
+                  <button class="vpb-icon-btn vpb-icon-btn--remove" @click="removeSong(idx)">✕</button>
+                </div>
+              </div>
+            </transition-group>
+          </div>
+          <div class="vpb-actions-bar">
+            <button class="vpb-act-btn" @click="savePlaylist">💾 Save Playlist</button>
+            <button class="vpb-act-btn vpb-act-btn--ghost" @click="shufflePlaylist">🔀 Shuffle</button>
+            <button class="vpb-act-btn vpb-act-btn--danger" @click="clearPlaylist">🗑 Clear</button>
+          </div>
+        </div>
+
+        <div class="vpb-card" v-if="savedPlaylists.length">
+          <h2 class="vpb-card-title">📂 Saved Playlists <span class="vpb-count">{{ savedPlaylists.length }}</span></h2>
+          <div class="vpb-saved-list">
+            <div v-for="(pl, i) in savedPlaylists" :key="i" class="vpb-saved-row">
+              <div class="vpb-saved-info">
+                <span class="vpb-saved-name">{{ pl.name }}</span>
+                <span class="vpb-saved-meta">{{ pl.songs }} songs · {{ pl.mood }}</span>
+              </div>
+              <div class="vpb-saved-actions">
+                <button class="vpb-act-btn" @click="loadSaved(i)">▶ Load</button>
+                <button class="vpb-act-btn vpb-act-btn--danger" @click="deleteSaved(i)">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vpb-empty" v-if="!selectedMood">
+          <div class="vpb-empty-icon">🎛️</div>
+          <p>Select a mood above to start building your playlist</p>
+        </div>
+
+      </div>
+    </section>
+
+    </div>
+  </main>
+
+  <div class="player-bar" id="playerBar"
+       role="region" aria-label="Music player">
+    <div class="player-inner">
+
+      <img class="player-art" id="playerArt" src="" alt="Album art"/>
+
+      <div class="player-info">
+        <span class="player-title"  id="playerTitle">Select a song</span>
+        <span class="player-artist" id="playerArtist">—</span>
+      </div>
+
+      <div class="player-seek">
+        <span class="seek-time" id="seekCurrent">0:00</span>
+        <div class="seek-bar" id="seekBar"
+             onclick="seekAudio(event)"
+             role="slider" aria-label="Song progress"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="seek-fill" id="seekFill" style="width:0%"></div>
+        </div>
+        <span class="seek-time" id="seekTotal">0:00</span>
+      </div>
+
+      <div class="player-controls">
+        <button class="ctrl-btn" onclick="prevSong()"
+                aria-label="Previous song" title="Previous">⏮</button>
+        <button class="ctrl-btn ctrl-play" id="playBtn"
+                onclick="togglePlay()" aria-label="Play or Pause">▶</button>
+        <button class="ctrl-btn" onclick="nextSong()"
+                aria-label="Next song" title="Next">⏭</button>
+        <button class="ctrl-btn ctrl-stop" onclick="stopAudio()"
+                aria-label="Stop and close player" title="Stop">⏹</button>
+      </div>
+
+      <div class="player-vol">
+        <span class="vol-icon" aria-hidden="true">🔊</span>
+        <input type="range" class="vol-slider" id="volSlider"
+               min="0" max="1" step="0.01" value="0.8"
+               oninput="setVolume(this.value)"
+               aria-label="Volume"/>
+      </div>
+
+      <button class="ctrl-btn fav-player-btn" id="playerFavBtn"
+              onclick="toggleFavPlayer()"
+              aria-label="Toggle favourite">♡</button>
+
+    </div>
+  </div>
+
+</div>
+
+
+<div id="authWrap">
+  <div class="auth-screen">
+    <div class="auth-card">
+
+      <div class="auth-brand">
+        <span class="auth-wave">🎵</span>
+        <span class="auth-brand-name">NexTune</span>
+        <p class="auth-brand-sub">Music that feels you</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin"
+                onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabSignup"
+                onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <div id="loginForm">
+
+        <div class="msg err" id="loginErr" role="alert" style="display:none"></div>
+
+        <button class="btn-google" onclick="googleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-divider">or with email</div>
+
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail"
+                 placeholder="you@email.com"
+                 autocomplete="email"/>
+        </div>
+
+        <div class="field">
+          <label for="loginPass">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="loginPass"
+                   placeholder="••••••••"
+                   autocomplete="current-password"
+                   onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button class="pass-toggle"
+                    onclick="togglePassVis('loginPass',this)"
+                    aria-label="Show or hide password"
+                    type="button">👁</button>
+          </div>
+        </div>
+
+        <button class="btn btn-accent btn-full mt-12"
+                onclick="doLogin()">Sign In →</button>
+
+      </div>
+
+      <div id="signupForm" style="display:none">
+
+        <div class="msg err" id="signupErr" role="alert" style="display:none"></div>
+        <div class="msg ok"  id="signupOk"  role="status" style="display:none"></div>
+
+        <button class="btn-google" onclick="googleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Sign up with Google
+        </button>
+
+        <div class="auth-divider">or with email</div>
+
+        <div class="field">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName"
+                 placeholder="Your full name"
+                 autocomplete="name"/>
+        </div>
+
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail"
+                 placeholder="you@email.com"
+                 autocomplete="email"/>
+        </div>
+
+        <div class="field">
+          <label for="signupPass">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="signupPass"
+                   placeholder="minimum 6 characters"
+                   autocomplete="new-password"/>
+            <button class="pass-toggle"
+                    onclick="togglePassVis('signupPass',this)"
+                    aria-label="Show or hide password"
+                    type="button">👁</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Preferred Music Languages
+            <span class="field-hint">(select all you enjoy)</span>
+          </label>
+          <div class="lang-grid">
+            <div class="lang-chip"    onclick="toggleLang(this,'English')">🇬🇧 English</div>
+            <div class="lang-chip on" onclick="toggleLang(this,'Hindi')">🇮🇳 Hindi</div>
+            <div class="lang-chip"    onclick="toggleLang(this,'Tamil')">🎵 Tamil</div>
+            <div class="lang-chip"    onclick="toggleLang(this,'Telugu')">🎶 Telugu</div>
+            <div class="lang-chip on" onclick="toggleLang(this,'Malayalam')">🌴 Malayalam</div>
+            <div class="lang-chip"    onclick="toggleLang(this,'Kannada')">🎼 Kannada</div>
+            <div class="lang-chip"    onclick="toggleLang(this,'Korean')">🇰🇷 Korean</div>
+            <div class="lang-chip"    onclick="toggleLang(this,'Spanish')">🇪🇸 Spanish</div>
+          </div>
+        </div>
+
+        <button class="btn btn-accent btn-full mt-12"
+                onclick="doSignup()">Create Account →</button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<audio id="audioEl" preload="none" crossorigin="anonymous"></audio>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
